@@ -1,6 +1,7 @@
-from Server.dbutils import SqliteDB
+from dbutils import SqliteDB
+from conf import db_name
 
-db = SqliteDB()
+db = SqliteDB(db_name)
 
 shops = [
     {'id': 1, 'name_shop': 'Пятерочка', 'img_path': 'media/5chka.png'},
