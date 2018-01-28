@@ -1,7 +1,8 @@
-from socket import *
-from dbutils import SqliteDB
 import json
-from config import *
+from socket import *
+
+from Client.config import *
+from dbutils import SqliteDB
 
 
 class DataHandler:

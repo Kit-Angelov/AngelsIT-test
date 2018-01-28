@@ -1,6 +1,6 @@
 from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtQml import QQmlApplicationEngine
-from messages import *
+from QtModels import *
 
 
 def main():
@@ -11,11 +11,11 @@ def main():
 
     app = QGuiApplication(sys_argv)
 
-    listMessages = ListMessages()
-
     engine = QQmlApplicationEngine()
-    engine.rootContext().setContextProperty('listMessages', listMessages)
-    engine.load('main.qml')
+    engine.rootContext().setContextProperty('listShops', listShops)
+    engine.rootContext().setContextProperty('listProducts', listProducts)
+    engine.rootContext().setContextProperty('listBasketElems', listBasketElems)
+    engine.load('Client/views/shops.qml')
 
     exit(app.exec_())
 
