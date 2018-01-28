@@ -1,3 +1,9 @@
+"""
+    Представление обьектов системы в виде питоновских классов
+    Для удобства работы с сущностями в представлениях QT обьектов
+"""
+
+
 class Shop:
 
     def __init__(self, id, name_shop, img_path):
@@ -11,7 +17,8 @@ class Shop:
 
 class Product:
 
-    def __init__(self, name_product, price, shop_id):
+    def __init__(self, id, name_product, price, shop_id):
+        self.id = id
         self.name_product = name_product
         self.price = price
         self.shop_id = shop_id
@@ -32,10 +39,13 @@ class Basket:
 
 class Basket_elem:
 
-    def __init__(self, count_product, product_id, basket_id):
+    def __init__(self, count_product, product_id, basket_id, product_name, product_price):
         self.count_product = count_product
         self.product_id = product_id
         self.basket_id = basket_id
+        self.product_name = product_name
+        self.product_price = product_price
+        self.cost = float(self.product_price) * int(self.count_product)
 
     def __repr__(self):
         return '{} {} {}'.format(str(self.count_product), str(self.product_id), str(self.basket_id))

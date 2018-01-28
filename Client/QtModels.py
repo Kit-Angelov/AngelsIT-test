@@ -1,10 +1,12 @@
-from PyQt5.QtQml import QQmlListProperty
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, pyqtProperty
 import json
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, pyqtProperty
+from PyQt5.QtQml import QQmlListProperty
 from clientSender import ClientSender
-from clientGetter import ClientGetter
+from dataGetter import *
+from models import *
 
 
+# Обьект магазина
 class Shop(QObject):
     contentNameShop = pyqtSignal()
     contentImgPath = pyqtSignal()
@@ -29,6 +31,7 @@ class Shop(QObject):
         return self._id
 
 
+# обьект списка магазинов
 class ListShops(QObject):
     listShops = pyqtSignal()
 
@@ -38,8 +41,7 @@ class ListShops(QObject):
         self.setShops()
 
     def setShops(self):
-        clientGetter = ClientGetter()
-        shops = clientGetter.getShops()
+        shops = getShops()
         for item in shops:
             self._shops.append(Shop(item))
 
@@ -51,19 +53,21 @@ class ListShops(QObject):
 
     @pyqtSlot(int)
     def chooseShop(self, arg):
-        print('arg', arg)
         listProducts.setProducts(arg)
 
 
+# обьект продукта
 class Product(QObject):
     contentNameProduct = pyqtSignal()
     contentPrice = pyqtSignal()
+    contentId = pyqtSignal()
 
     def __init__(self, product, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._id = str(product.id)
         self._name_product = product.name_product
-        self._price = product.price
-        self._shop_id = product.shop_id
+        self._price = str(product.price)
+        self._shop_id = str(product.shop_id)
 
     @pyqtProperty('QString', notify=contentNameProduct)
     def name_product(self):
@@ -73,7 +77,12 @@ class Product(QObject):
     def price(self):
         return self._price
 
+    @pyqtProperty('QString', notify=contentId)
+    def id(self):
+        return self._id
 
+
+# обьект списка продуктов
 class ListProducts(QObject):
 
     listProducts = pyqtSignal()
@@ -83,8 +92,7 @@ class ListProducts(QObject):
         self._products = []
 
     def setProducts(self, shop_id):
-        clientGetter = ClientGetter()
-        products = clientGetter.getProducts(shop_id)
+        products = getProducts(shop_id)
         self._products = []
         for item in products:
             self._products.append(Product(item))
@@ -95,64 +103,96 @@ class ListProducts(QObject):
         return QQmlListProperty(Product, self, self._products)
 
 
-class Message(QObject):
+# обьект элемента корзины
+class BasketElem(QObject):
+    contentCount = pyqtSignal()
+    contentBasketId = pyqtSignal()
+    contentProductId = pyqtSignal()
+    contentProductName = pyqtSignal()
+    contentProductPrice = pyqtSignal()
+    contentCost = pyqtSignal()
 
-    contentMessage = pyqtSignal()
-
-    def __init__(self, content='', *args, **kwargs):
+    def __init__(self, basket_elem, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._content = content
+        self._count = str(basket_elem.count_product)
+        self._basket_id = str(basket_id)
+        self._product_id = str(basket_elem.product_id)
+        self._product_name = str(basket_elem.product_name)
+        self._product_price = str(basket_elem.product_price)
+        self._cost = str(basket_elem.cost)
 
-    @pyqtProperty('QString', notify=contentMessage)
-    def content(self):
-        return self._content
+    @pyqtProperty('QString', notify=contentCount)
+    def count(self):
+        return self._count
 
-    @content.setter
-    def content(self, content):
-        if content != self._content:
-            self._content = content
-            self.contentMessage.emit()
+    @pyqtProperty('QString', notify=contentBasketId)
+    def basket_id(self):
+        return self._basket_id
+
+    @pyqtProperty('QString', notify=contentProductId)
+    def product_id(self):
+        return self._product_id
+
+    @pyqtProperty('QString', notify=contentProductName)
+    def product_name(self):
+        return self._product_name
+
+    @pyqtProperty('QString', notify=contentProductPrice)
+    def product_price(self):
+        return self._product_price
+
+    @pyqtProperty('QString', notify=contentCost)
+    def cost(self):
+        return self._cost
 
 
-class ListMessages(QObject):
+# обьект списка элементов корзины
+class ListBasketElems(QObject):
 
-    listMessages = pyqtSignal()
+    listBasketElems = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._messages = []
+        self._basket_elems = []
 
-    @pyqtProperty(QQmlListProperty, notify=listMessages)
-    def messages(self):
-        return QQmlListProperty(Message, self, self._messages)
+    @pyqtProperty(QQmlListProperty, notify=listBasketElems)
+    def basket_elems(self):
+        return QQmlListProperty(BasketElem, self, self._basket_elems)
 
-    @messages.setter
-    def messages(self, messages):
-        if messages != self._messages:
-            self._messages = messages
-            self.listMessages.emit()
+    def appendProduct(self, basket_elem):
+        self._basket_elems.append(basket_elem)
+        self.listBasketElems.emit()
 
-    def appendMessage(self, message):
-        self._messages.append(message)
-        self.listMessages.emit()
+    addProductSignal = pyqtSignal(int, int, str, str, arguments=['addProduct'])
 
-    addMessageSignal = pyqtSignal(str, arguments=['addMessage'])
+    @pyqtSlot(int, int, str, str)
+    def addProduct(self, arg1, arg2, arg3, arg4):
+        basket = Basket_elem(arg1, arg2, basket_id, arg3, arg4)
+        self._basket_elems.append(BasketElem(basket))
+        self.listBasketElems.emit()
 
-    @pyqtSlot(str)
-    def addMessage(self, arg):
-        self.appendMessage(Message(arg))
-
-    sendMessageSignal = pyqtSignal(arguments=['sendMessage'])
+    sendBaketSignal = pyqtSignal(arguments=['sendBasket'])
 
     @pyqtSlot()
-    def sendMessage(self):
-        data = json.dumps([item.content for item in self._messages])
-        sender = ClientSender()
-        sender.sendToServer(data)
-        self._messages = []
-        self.listMessages.emit()
+    def sendBasket(self):
+        data = json.dumps([{"product_id": item.product_id,
+                            "basket_id": basket_id,
+                            "count": item.count} for item in self._basket_elems])
+        postBasket(data)
+        self._basket_elems = []
+        self.listBasketElems.emit()
+
+    deleteBasketElemSignal = pyqtSignal(int, arguments=['deleteBasketElem'])
+
+    @pyqtSlot(int)
+    def deleteBasketElem(self, arg):
+        x = self._basket_elems.pop(arg)
+        self.listBasketElems.emit()
 
 
-class Init:
-    listShops = ListShops()
-    listProducts = ListProducts()
+# ничего лучше не придумал как проинициализировать обьекты тут, т.к. была необходимость обращаться к обьектам Qt
+# из других обьектов в ходе выполнения программы
+basket_id = createBasket()
+listShops = ListShops()
+listProducts = ListProducts()
+listBasketElems = ListBasketElems()

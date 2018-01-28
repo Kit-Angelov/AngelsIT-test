@@ -1,24 +1,37 @@
+
 from dbutils import SqliteDB
-from models import *
+from datetime import date
+from config import *
 
 
-class DataGetter:
+class DataGetterSetter:
+    """
+    Обработчики запросов, умеют обращаться к бд
+    """
 
     def __init__(self):
-        self.db = SqliteDB()
+        self.db = SqliteDB(db_name)
 
     def getShops(self):
-        list_shop_db = self.db.get_shops()
-        list_shop_obj = list()
-        for item in list_shop_db:
-            shop = Shop(id=item[0], name_shop=item[1], img_path=item[2])
-            list_shop_obj.append(shop)
-        return list_shop_obj
+        list_shops = self.db.get_shops()
+        return list_shops
 
     def getProducts(self, shop_id):
-        list_product_db = self.db.get_products(shop_id)
-        list_product_obj = list()
-        for item in list_product_db:
-            product = Product(name_product=item[1], price=str(item[2]), shop_id=shop_id)
-            list_product_obj.append(product)
-        return list_product_obj
+        list_products = self.db.get_products(shop_id)
+        return list_products
+
+    def getBasket(self):
+        basket_id = self.db.add_basket(date.today())
+        return basket_id
+
+    # обработка данных со списком товаров для добавления в элементы корзины
+    def handleData(self, data):
+        basket_id = ''
+        print('Список продуктов: ')
+        for item in data:
+            self.db.add_basket_elem(item['count'], item['product_id'], item['basket_id'])
+            basket_id = item['basket_id']
+            print(item)
+        # print('Продукты к покупке: ')
+        # for item in self.sqliteDB.get_basket_elems(basket_id):
+        #     print(item)
